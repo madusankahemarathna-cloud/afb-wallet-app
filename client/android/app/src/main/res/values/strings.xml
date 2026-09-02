@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AFB Pay</string>
+    <string name="title_activity_main">AFB Pay</string>
+    <string name="package_name">com.afb.wallet</string>
+    <string name="custom_url_scheme">com.afb.wallet</string>
+</resources>

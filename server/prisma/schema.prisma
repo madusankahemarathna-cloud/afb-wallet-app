@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(uuid())
+  serviceNo     String          @unique
+  name          String
+  phone         String
+  role          String          @default("CUSTOMER") // CUSTOMER, MERCHANT, ADMIN
+  pinHash       String
+  status        String          @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  wallet        Wallet?
+  savedCards    SavedCard[]
+  outlets       Outlet[]
+  topupRequests TopupRequest[]
+  settlements   Settlement[]
+}
+
+model Wallet {
+  id            String          @id @default(uuid())
+  userId        String          @unique
+  accountNumber String          @unique // e.g. WLT-10452
+  balance       Float           @default(0.0)
+  currency      String          @default("LKR")
+  status        String          @default("ACTIVE") // ACTIVE, FROZEN
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentTxns      Transaction[]   @relation("SentTransactions")
+  receivedTxns  Transaction[]   @relation("ReceivedTransactions")
+  topupRequests TopupRequest[]
+}
+
+model SavedCard {
+  id           String   @id @default(uuid())
+  userId       String
+  gatewayToken String
+  maskedPan    String   // e.g. **** **** **** 4242
+  cardHolder   String
+  expiry       String   // MM/YY
+  cardType     String   // VISA, MASTERCARD, AMEX
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Outlet {
+  id             String       @id @default(uuid())
+  name           String       // e.g. "Eagle Canteen", "Base Yoghurt Project"
+  category       String       // "Canteen", "Salon", "Yoghurt Project", "Tombola Stall", "Welfare Mart"
+  merchantUserId String
+  qrHash         String       @unique // Unique static QR identifier e.g. "AFB-OUTLET-CANTEEN-01"
+  status         String       @default("ACTIVE")
+  location       String?
+  bankName       String?
+  bankAccountNo  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  merchantUser   User         @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+  settlements    Settlement[]
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  referenceId      String   @unique // e.g. TXN-809412
+  senderWalletId   String?
+  receiverWalletId String?
+  amount           Float
+  fee              Float    @default(0.0)
+  type             String   // TOPUP_MANUAL, TOPUP_CARD, PURCHASE, REFUND, CASHOUT
+  status           String   @default("SUCCESS") // PENDING, SUCCESS, FAILED
+  description      String?
+  metadata         String?  // JSON string for outlet details, items, invoice info
+  createdAt        DateTime @default(now())
+
+  senderWallet     Wallet?  @relation("SentTransactions", fields: [senderWalletId], references: [id])
+  receiverWallet   Wallet?  @relation("ReceivedTransactions", fields: [receiverWalletId], references: [id])
+}
+
+model TopupRequest {
+  id            String    @id @default(uuid())
+  userId        String
+  walletId      String
+  amount        Float
+  bankReference String
+  slipImage     String?   // Base64 data URI or relative path
+  notes         String?
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminNotes    String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet        Wallet    @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model Settlement {
+  id             String    @id @default(uuid())
+  outletId       String
+  merchantUserId String
+  amount         Float
+  bankName       String
+  accountNo      String
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  adminNotes     String?
+  settledAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  outlet         Outlet    @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  merchantUser   User      @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+}
