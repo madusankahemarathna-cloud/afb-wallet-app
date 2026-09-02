@@ -12,6 +12,7 @@ model User {
   serviceNo     String          @unique
   name          String
   phone         String
+  email         String?         @unique
   role          String          @default("CUSTOMER") // CUSTOMER, MERCHANT, ADMIN
   pinHash       String
   status        String          @default("ACTIVE") // ACTIVE, SUSPENDED
@@ -23,6 +24,16 @@ model User {
   outlets       Outlet[]
   topupRequests TopupRequest[]
   settlements   Settlement[]
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  target    String   // email or serviceNo
+  otpHash   String
+  type      String   // "REGISTRATION" | "PASSWORD_RESET"
+  metadata  String?  // JSON string storing pending registration details
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Wallet {

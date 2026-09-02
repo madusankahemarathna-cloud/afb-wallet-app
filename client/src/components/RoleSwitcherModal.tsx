@@ -248,7 +248,9 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({ onClose, o
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">4-Digit Security PIN</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-slate-300">4-Digit Security PIN</label>
+                </div>
                 <input
                   type="password"
                   maxLength={6}

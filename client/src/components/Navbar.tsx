@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Radio, Users, LogOut, Wallet as WalletIcon, Store, Landmark, ChevronDown, Globe } from 'lucide-react';
+import { Shield, Radio, Users, LogOut, Wallet as WalletIcon, Store, Landmark, ChevronDown, Globe, UserPlus, KeyRound, Lock } from 'lucide-react';
 import { RoleSwitcherModal } from './RoleSwitcherModal';
 import { ServerConfigModal } from './ServerConfigModal';
+import { AuthModal } from './AuthModal';
 
 interface NavbarProps {
   currentTab: 'CUSTOMER' | 'MERCHANT' | 'ADMIN';
@@ -13,6 +14,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
   const { user, wallet, logout, isSocketConnected } = useAuth();
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [showServerConfig, setShowServerConfig] = useState(false);
+  const [authModalConfig, setAuthModalConfig] = useState<{ isOpen: boolean; mode: 'LOGIN' | 'REGISTER' | 'FORGOT_PASSWORD' }>({
+    isOpen: false,
+    mode: 'LOGIN'
+  });
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
@@ -90,6 +95,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
 
             {/* User Profile & Demo Switcher */}
             <div className="flex items-center gap-2.5">
+              {/* Register / Sign In with OTP button */}
+              <button
+                onClick={() => setAuthModalConfig({ isOpen: true, mode: 'REGISTER' })}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-aviation-600 hover:bg-aviation-500 text-white text-xs font-semibold transition-all shadow-md shadow-aviation-700/30 hover:scale-[1.02]"
+                title="Register New Personnel Account with Gmail OTP"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Register (OTP)</span>
+              </button>
+
               {/* Server URL Config button */}
               <button
                 onClick={() => setShowServerConfig(true)}
@@ -163,6 +178,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
           </button>
         </div>
       </header>
+
+      {/* Auth Modal (Sign In / Register / Forgot Password) */}
+      <AuthModal
+        isOpen={authModalConfig.isOpen}
+        initialMode={authModalConfig.mode}
+        onClose={() => setAuthModalConfig({ ...authModalConfig, isOpen: false })}
+      />
 
       {/* Role Switcher Modal */}
       {showRoleSwitcher && (

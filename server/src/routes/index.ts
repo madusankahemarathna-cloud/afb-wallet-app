@@ -9,7 +9,10 @@ import { authenticateJWT, requireRole } from '../middleware/auth';
 const router = Router();
 
 // ==================== AUTH ROUTES ====================
-router.post('/auth/register', AuthController.register);
+router.post('/auth/register-send-otp', AuthController.registerSendOtp);
+router.post('/auth/register-verify-otp', AuthController.registerVerifyOtp);
+router.post('/auth/forgot-password-send-otp', AuthController.forgotPasswordSendOtp);
+router.post('/auth/reset-password', AuthController.resetPassword);
 router.post('/auth/login', AuthController.login);
 router.post('/auth/quick-login', AuthController.quickLogin);
 router.get('/auth/me', authenticateJWT, AuthController.getMe);

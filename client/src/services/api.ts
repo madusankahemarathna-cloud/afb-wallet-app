@@ -51,6 +51,34 @@ export class ApiService {
   }
 
   // Auth
+  static registerSendOtp(payload: { serviceNo: string; name: string; phone: string; email: string; pin: string; role?: string }) {
+    return this.request('/auth/register-send-otp', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  static registerVerifyOtp(payload: { email: string; otp: string }) {
+    return this.request('/auth/register-verify-otp', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  static forgotPasswordSendOtp(identifier: string) {
+    return this.request('/auth/forgot-password-send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ identifier })
+    });
+  }
+
+  static resetPassword(payload: { userId: string; otp: string; newPin: string }) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
   static login(serviceNo: string, pin: string) {
     return this.request('/auth/login', {
       method: 'POST',

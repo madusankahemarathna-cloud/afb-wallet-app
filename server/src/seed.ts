@@ -22,6 +22,7 @@ export async function seedDatabase(client?: PrismaClient) {
       serviceNo: 'AFB-0001',
       name: 'Sqd Ldr V. Jayawardena (Finance Officer)',
       phone: '+94771234500',
+      email: 'finance.officer@afb-wallet.mil',
       role: 'ADMIN',
       pinHash: defaultPinHash,
       wallet: {
@@ -41,6 +42,7 @@ export async function seedDatabase(client?: PrismaClient) {
       serviceNo: 'AFB-M001',
       name: 'Eagle Canteen & Bakery Manager',
       phone: '+94772345601',
+      email: 'eagle.canteen@afb-wallet.mil',
       role: 'MERCHANT',
       pinHash: defaultPinHash,
       wallet: {
