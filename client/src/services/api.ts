@@ -3,13 +3,19 @@ export const getServerBaseUrl = (): string => {
   if (metaEnv && metaEnv.VITE_API_URL) {
     return metaEnv.VITE_API_URL;
   }
+  if (typeof window !== 'undefined' && localStorage.getItem('afb_server_url')) {
+    return localStorage.getItem('afb_server_url')!;
+  }
   const isCapacitor = typeof window !== 'undefined' && (
     !!(window as any).Capacitor?.isNativePlatform?.() ||
     window.location.protocol === 'capacitor:' ||
     (window.location.hostname === 'localhost' && !window.location.port)
   );
   if (isCapacitor) {
-    return localStorage.getItem('afb_server_url') || 'http://10.92.228.215:5000';
+    return 'https://afb-wallet-app.onrender.com';
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://afb-wallet-app.onrender.com';
   }
   return '';
 };

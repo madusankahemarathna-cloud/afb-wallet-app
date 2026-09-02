@@ -1,9 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
-
-async function main() {
+export async function seedDatabase(client?: PrismaClient) {
+  const prisma = client || new PrismaClient();
   console.log('Seeding Air Force Base Closed-Loop Wallet Database...');
 
   // Clean old data
@@ -298,7 +297,7 @@ async function main() {
     });
   }
 
-  // Seed sample Top-up Request (Pending & Approved)
+  // Seed sample Top-up Request
   if (customer2.wallet) {
     await prisma.topupRequest.create({
       data: {
@@ -329,17 +328,4 @@ async function main() {
   }
 
   console.log('Database seeded successfully with Users, Outlets, Wallets, Transactions, and Requests.');
-}
-
-export { main as seedDatabase };
-
-if (require.main === module) {
-  main()
-    .catch((e) => {
-      console.error('Seeding error:', e);
-      process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
 }
