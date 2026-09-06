@@ -14,7 +14,7 @@ export const ServerConfigModal: React.FC<ServerConfigModalProps> = ({ isOpen, on
 
   useEffect(() => {
     if (isOpen) {
-      const current = localStorage.getItem('afb_server_url') || getServerBaseUrl() || 'http://10.92.228.215:5000';
+      const current = localStorage.getItem('afb_server_url') || getServerBaseUrl() || 'https://afb-wallet-app.onrender.com';
       setUrl(current);
       setTestResult(null);
     }
