@@ -1,6 +1,12 @@
 export const getServerBaseUrl = (): string => {
-  if (typeof window !== 'undefined' && localStorage.getItem('afb_server_url')) {
-    return localStorage.getItem('afb_server_url')!;
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('afb_server_url');
+    // If user explicitly saved an https cloud URL, use it
+    if (saved && (saved.startsWith('https://') || saved.startsWith('http://'))) {
+      if (!saved.includes('localhost') && !saved.includes('10.92.') && !saved.includes('127.0.0.1')) {
+        return saved;
+      }
+    }
   }
   const metaEnv = (import.meta as any).env;
   if (metaEnv && metaEnv.VITE_API_URL) {
@@ -34,16 +40,22 @@ export class ApiService {
 
     const baseUrl = getServerBaseUrl();
     const url = `${baseUrl}/api${endpoint}`;
-    const res = await fetch(url, {
-      ...options,
-      headers
-    });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'An error occurred during request');
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'An error occurred during request');
+      }
+      return data;
+    } catch (err: any) {
+      console.error(`[API Network Error] ${url}:`, err);
+      throw new Error(err.message || 'Network connection failed. Please check internet access.');
     }
-    return data;
   }
 
   // Auth
