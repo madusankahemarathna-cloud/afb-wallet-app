@@ -4,8 +4,8 @@ import { Navbar } from './components/Navbar';
 import { CustomerPortal } from './components/CustomerPortal';
 import { MerchantTerminal } from './components/MerchantTerminal';
 import { AdminPortal } from './components/AdminPortal';
-import { SimulatorBar } from './components/SimulatorBar';
-import { Shield, Sparkles } from 'lucide-react';
+import { AuthScreen } from './components/AuthScreen';
+import { Shield } from 'lucide-react';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -26,12 +26,17 @@ export function App() {
         </div>
         <div className="text-center space-y-1">
           <div className="text-sm font-bold font-mono tracking-wider text-slate-200">
-            INITIALIZING AIR FORCE BASE CLOSED-LOOP WALLET
+            AIR FORCE BASE DIGITAL WALLET
           </div>
-          <p className="text-xs text-slate-500">Connecting to secure double-entry financial ledger...</p>
+          <p className="text-xs text-slate-500">Connecting to secure financial ledger...</p>
         </div>
       </div>
     );
+  }
+
+  // If user is not authenticated, present the Login / Register screen directly
+  if (!user) {
+    return <AuthScreen />;
   }
 
   return (
@@ -45,9 +50,6 @@ export function App() {
         {currentTab === 'MERCHANT' && <MerchantTerminal />}
         {currentTab === 'ADMIN' && <AdminPortal />}
       </main>
-
-      {/* End-to-End Test Simulator Bar */}
-      <SimulatorBar />
     </div>
   );
 }

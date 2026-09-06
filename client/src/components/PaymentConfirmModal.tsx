@@ -17,7 +17,7 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
   const [amount, setAmount] = useState<string>(
     decoded.paymentDetails.fixedAmount ? decoded.paymentDetails.fixedAmount.toString() : ''
   );
-  const [pin, setPin] = useState<string>('1234'); // Default pre-filled with demo PIN for effortless testing
+  const [pin, setPin] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +56,6 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
       if (res.success && res.receipt) {
         sound.playSuccessBeep();
         
-        // Trigger celebratory confetti
         confetti({
           particleCount: 80,
           spread: 70,
@@ -67,7 +66,7 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
         onSuccess(res.receipt);
       }
     } catch (err: any) {
-      setError(err.message || 'Payment execution failed');
+      setError(err.message || 'Payment failed. Please verify your PIN.');
     } finally {
       setLoading(false);
     }
@@ -156,7 +155,7 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
             <div className="flex justify-between text-slate-400">
               <span>Remaining Balance:</span>
               <span className={isInsufficient ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
-                LKR {remainingBalance.toFixed(2)}
+                {isInsufficient ? 'INSUFFICIENT FUNDS' : `LKR ${remainingBalance.toFixed(2)}`}
               </span>
             </div>
           </div>
@@ -168,7 +167,7 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Lunch with Squadron, Welfare goods"
+              placeholder="e.g. Lunch, Welfare goods"
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-aviation-500"
             />
           </div>
@@ -183,7 +182,7 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
               maxLength={6}
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              placeholder="•••• (Demo: 1234)"
+              placeholder="••••"
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-center text-lg font-mono font-bold tracking-widest text-slate-100 placeholder-slate-600 focus:outline-none focus:border-aviation-500"
               required
             />
@@ -192,9 +191,9 @@ export const PaymentConfirmModal: React.FC<PaymentConfirmModalProps> = ({ decode
           {/* Submit Pay Button */}
           <button
             type="submit"
-            disabled={loading || isInsufficient || numAmount <= 0}
+            disabled={loading || isInsufficient || numAmount <= 0 || !pin}
             className={`w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
-              isInsufficient
+              isInsufficient || !pin
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-700/30'
             }`}

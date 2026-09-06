@@ -7,9 +7,7 @@ interface AuthContextType {
   user: User | null;
   wallet: Wallet | null;
   loading: boolean;
-  demoUsers: any[];
-  login: (serviceNo: string, pin: string) => Promise<void>;
-  quickLogin: (serviceNo: string) => Promise<void>;
+  login: (serviceNoOrEmail: string, pin: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   refreshWallet: () => Promise<void>;
@@ -22,7 +20,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [demoUsers, setDemoUsers] = useState<any[]>([]);
   const [isSocketConnected, setIsSocketConnected] = useState<boolean>(false);
 
   // Initialize socket listener
@@ -40,17 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       socket.off('disconnect', onDisconnect);
     };
   }, []);
-
-  const fetchDemoUsers = async () => {
-    try {
-      const data = await ApiService.getDemoUsers();
-      if (data.success) {
-        setDemoUsers(data.users);
-      }
-    } catch (e) {
-      console.warn('Failed to load demo users list:', e);
-    }
-  };
 
   const refreshUser = async () => {
     try {
@@ -90,21 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await fetchDemoUsers();
       const token = localStorage.getItem('afb_auth_token');
       if (token) {
         await refreshUser();
       } else {
-        // Default login as demo Customer (Wg Cdr K. Perera) for immediate interactive experience
-        await quickLogin('AFB-10452');
+        setUser(null);
+        setWallet(null);
       }
       setLoading(false);
     };
     init();
   }, []);
 
-  const login = async (serviceNo: string, pin: string) => {
-    const res = await ApiService.login(serviceNo, pin);
+  const login = async (serviceNoOrEmail: string, pin: string) => {
+    const res = await ApiService.login(serviceNoOrEmail, pin);
     if (res.success && res.token) {
       localStorage.setItem('afb_auth_token', res.token);
       setUser(res.user);
@@ -116,24 +101,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           res.user.outlets.forEach((o: any) => joinOutletRoom(o.id));
         }
       }
-      await fetchDemoUsers();
-    }
-  };
-
-  const quickLogin = async (serviceNo: string) => {
-    const res = await ApiService.quickLogin(serviceNo);
-    if (res.success && res.token) {
-      localStorage.setItem('afb_auth_token', res.token);
-      setUser(res.user);
-      setWallet(res.user.wallet || null);
-      joinUserRoom(res.user.id);
-      if (res.user.role === 'MERCHANT') {
-        joinMerchantRoom(res.user.id);
-        if (res.user.outlets) {
-          res.user.outlets.forEach((o: any) => joinOutletRoom(o.id));
-        }
-      }
-      await fetchDemoUsers();
     }
   };
 
@@ -149,9 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         wallet,
         loading,
-        demoUsers,
         login,
-        quickLogin,
         logout,
         refreshUser,
         refreshWallet,

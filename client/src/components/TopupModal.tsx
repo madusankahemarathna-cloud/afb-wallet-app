@@ -15,7 +15,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({ onClose, onSuccess }) =>
   const [activeTab, setActiveTab] = useState<'CARD' | 'MANUAL'>('CARD');
 
   // Card Tab State
-  const [cardAmount, setCardAmount] = useState<string>('2500');
+  const [cardAmount, setCardAmount] = useState<string>('');
   const [selectedCardId, setSelectedCardId] = useState<string>(user?.savedCards?.[0]?.id || '');
   const [cardNumber, setCardNumber] = useState<string>('');
   const [cardHolder, setCardHolder] = useState<string>('');
@@ -23,7 +23,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({ onClose, onSuccess }) =>
   const [isNewCard, setIsNewCard] = useState<boolean>(!user?.savedCards?.length);
 
   // Manual Slip State
-  const [manualAmount, setManualAmount] = useState<string>('5000');
+  const [manualAmount, setManualAmount] = useState<string>('');
   const [bankRef, setBankRef] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [slipImage, setSlipImage] = useState<string | null>(null);

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Radio, Users, LogOut, Wallet as WalletIcon, Store, Landmark, ChevronDown, Globe, UserPlus, KeyRound, Lock } from 'lucide-react';
-import { RoleSwitcherModal } from './RoleSwitcherModal';
+import { Shield, Radio, LogOut, Wallet as WalletIcon, Store, Landmark, Globe } from 'lucide-react';
 import { ServerConfigModal } from './ServerConfigModal';
-import { AuthModal } from './AuthModal';
 
 interface NavbarProps {
   currentTab: 'CUSTOMER' | 'MERCHANT' | 'ADMIN';
@@ -12,23 +10,21 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => {
   const { user, wallet, logout, isSocketConnected } = useAuth();
-  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [showServerConfig, setShowServerConfig] = useState(false);
-  const [authModalConfig, setAuthModalConfig] = useState<{ isOpen: boolean; mode: 'LOGIN' | 'REGISTER' | 'FORGOT_PASSWORD' }>({
-    isOpen: false,
-    mode: 'LOGIN'
-  });
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'ADMIN':
         return <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1"><Landmark className="w-3 h-3" /> FINANCE ADMIN</span>;
       case 'MERCHANT':
-        return <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1"><Store className="w-3 h-3" /> MERCHANT CASHIER</span>;
+        return <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1"><Store className="w-3 h-3" /> MERCHANT</span>;
       default:
-        return <span className="bg-aviation-500/20 text-aviation-400 border border-aviation-500/40 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1"><Shield className="w-3 h-3" /> SERVICE PERSONNEL</span>;
+        return <span className="bg-aviation-500/20 text-aviation-400 border border-aviation-500/40 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide flex items-center gap-1"><Shield className="w-3 h-3" /> PERSONNEL</span>;
     }
   };
+
+  const isUserAdmin = user?.role === 'ADMIN';
+  const isUserMerchant = user?.role === 'MERCHANT' || user?.role === 'ADMIN';
 
   return (
     <>
@@ -52,11 +48,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                     {isSocketConnected ? 'LIVE FEED' : 'OFFLINE'}
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-400 hidden sm:block">Welfare Projects & Closed-Loop Digital Ecosystem</p>
+                <p className="text-[11px] text-slate-400 hidden sm:block">Air Force Base Closed-Loop Digital Ecosystem</p>
               </div>
             </div>
 
-            {/* Navigation Tabs (Quick View Changer) */}
+            {/* Navigation Tabs (Restricted by Role) */}
             <nav className="hidden lg:flex items-center p-1 bg-slate-900/90 rounded-xl border border-slate-800">
               <button
                 onClick={() => setCurrentTab('CUSTOMER')}
@@ -67,68 +63,53 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                 }`}
               >
                 <WalletIcon className="w-3.5 h-3.5" />
-                Customer Wallet
+                My Wallet
               </button>
-              <button
-                onClick={() => setCurrentTab('MERCHANT')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  currentTab === 'MERCHANT'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-700/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                }`}
-              >
-                <Store className="w-3.5 h-3.5" />
-                Merchant POS Terminal
-              </button>
-              <button
-                onClick={() => setCurrentTab('ADMIN')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  currentTab === 'ADMIN'
-                    ? 'bg-amber-600 text-white shadow-md shadow-amber-700/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                }`}
-              >
-                <Landmark className="w-3.5 h-3.5" />
-                Finance Master Ledger
-              </button>
+
+              {isUserMerchant && (
+                <button
+                  onClick={() => setCurrentTab('MERCHANT')}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    currentTab === 'MERCHANT'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-700/30'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  Merchant POS Terminal
+                </button>
+              )}
+
+              {isUserAdmin && (
+                <button
+                  onClick={() => setCurrentTab('ADMIN')}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    currentTab === 'ADMIN'
+                      ? 'bg-amber-600 text-white shadow-md shadow-amber-700/30'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  <Landmark className="w-3.5 h-3.5" />
+                  Finance Master Ledger
+                </button>
+              )}
             </nav>
 
-            {/* User Profile & Demo Switcher */}
-            <div className="flex items-center gap-2.5">
-              {/* Register / Sign In with OTP button */}
-              <button
-                onClick={() => setAuthModalConfig({ isOpen: true, mode: 'REGISTER' })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-aviation-600 hover:bg-aviation-500 text-white text-xs font-semibold transition-all shadow-md shadow-aviation-700/30 hover:scale-[1.02]"
-                title="Register New Personnel Account with Gmail OTP"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Register (OTP)</span>
-              </button>
-
+            {/* User Profile & Actions */}
+            <div className="flex items-center gap-3">
               {/* Server URL Config button */}
               <button
                 onClick={() => setShowServerConfig(true)}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/70 text-slate-300 text-xs transition-all shadow-sm group"
-                title="Configure Live Cloud / Local Server URL"
+                title="Configure Server Connection"
               >
                 <Globe className="w-3.5 h-3.5 text-aviation-400 group-hover:rotate-45 transition-transform" />
                 <span className="hidden md:inline font-mono text-[11px]">Server</span>
               </button>
 
-              {/* Quick Persona Switch Button */}
-              <button
-                onClick={() => setShowRoleSwitcher(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/70 text-slate-200 text-xs transition-all shadow-sm group"
-                title="Switch test accounts (Officer, Merchant, Admin)"
-              >
-                <Users className="w-4 h-4 text-aviation-400 group-hover:scale-110 transition-transform" />
-                <span className="hidden sm:inline font-medium">Switch Role / Demo</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-
               {/* Active Profile Info */}
               {user && (
-                <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+                <div className="flex items-center gap-3 pl-2 border-l border-slate-800">
                   <div className="text-right hidden sm:block">
                     <div className="text-xs font-semibold text-slate-200">{user.name}</div>
                     <div className="text-[10px] font-mono text-aviation-400">{user.serviceNo}</div>
@@ -138,10 +119,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                   </div>
                   <button
                     onClick={logout}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl transition-all"
                     title="Logout"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="font-semibold">Logout</span>
                   </button>
                 </div>
               )}
@@ -158,44 +140,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
               currentTab === 'CUSTOMER' ? 'bg-aviation-600 text-white' : 'text-slate-400'
             }`}
           >
-            <WalletIcon className="w-3.5 h-3.5" /> Customer
+            <WalletIcon className="w-3.5 h-3.5" /> My Wallet
           </button>
-          <button
-            onClick={() => setCurrentTab('MERCHANT')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium ${
-              currentTab === 'MERCHANT' ? 'bg-emerald-600 text-white' : 'text-slate-400'
-            }`}
-          >
-            <Store className="w-3.5 h-3.5" /> Merchant POS
-          </button>
-          <button
-            onClick={() => setCurrentTab('ADMIN')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium ${
-              currentTab === 'ADMIN' ? 'bg-amber-600 text-white' : 'text-slate-400'
-            }`}
-          >
-            <Landmark className="w-3.5 h-3.5" /> Finance
-          </button>
+
+          {isUserMerchant && (
+            <button
+              onClick={() => setCurrentTab('MERCHANT')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium ${
+                currentTab === 'MERCHANT' ? 'bg-emerald-600 text-white' : 'text-slate-400'
+              }`}
+            >
+              <Store className="w-3.5 h-3.5" /> Merchant POS
+            </button>
+          )}
+
+          {isUserAdmin && (
+            <button
+              onClick={() => setCurrentTab('ADMIN')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium ${
+                currentTab === 'ADMIN' ? 'bg-amber-600 text-white' : 'text-slate-400'
+              }`}
+            >
+              <Landmark className="w-3.5 h-3.5" /> Finance
+            </button>
+          )}
         </div>
       </header>
-
-      {/* Auth Modal (Sign In / Register / Forgot Password) */}
-      <AuthModal
-        isOpen={authModalConfig.isOpen}
-        initialMode={authModalConfig.mode}
-        onClose={() => setAuthModalConfig({ ...authModalConfig, isOpen: false })}
-      />
-
-      {/* Role Switcher Modal */}
-      {showRoleSwitcher && (
-        <RoleSwitcherModal
-          onClose={() => setShowRoleSwitcher(false)}
-          onSelectRole={(role) => {
-            setCurrentTab(role);
-            setShowRoleSwitcher(false);
-          }}
-        />
-      )}
 
       {/* Live Server Config Modal */}
       <ServerConfigModal
