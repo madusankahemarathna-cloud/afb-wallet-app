@@ -1,23 +1,19 @@
 export const getServerBaseUrl = (): string => {
+  if (typeof window !== 'undefined' && localStorage.getItem('afb_server_url')) {
+    return localStorage.getItem('afb_server_url')!;
+  }
   const metaEnv = (import.meta as any).env;
   if (metaEnv && metaEnv.VITE_API_URL) {
     return metaEnv.VITE_API_URL;
   }
-  if (typeof window !== 'undefined' && localStorage.getItem('afb_server_url')) {
-    return localStorage.getItem('afb_server_url')!;
+
+  // Only when running in local computer browser dev server (port 5173/3000)
+  if (typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000')) {
+    return '';
   }
-  const isCapacitor = typeof window !== 'undefined' && (
-    !!(window as any).Capacitor?.isNativePlatform?.() ||
-    window.location.protocol === 'capacitor:' ||
-    (window.location.hostname === 'localhost' && !window.location.port)
-  );
-  if (isCapacitor) {
-    return 'https://afb-wallet-app.onrender.com';
-  }
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://afb-wallet-app.onrender.com';
-  }
-  return '';
+
+  // Default to Live Production Cloud Server for Android Mobile App (Capacitor) & Netlify
+  return 'https://afb-wallet-app.onrender.com';
 };
 
 export class ApiService {
