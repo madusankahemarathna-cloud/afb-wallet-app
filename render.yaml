@@ -12,3 +12,7 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
+      - key: GMAIL_USER
+        value: slafpay4@gmail.com
+      - key: GMAIL_APP_PASSWORD
+        value: qfhh lfaw nfnt erfc
