@@ -1,3 +1,5 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
+
 export const getServerBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('afb_server_url');
@@ -42,6 +44,30 @@ export class ApiService {
     const url = `${baseUrl}/api${endpoint}`;
 
     try {
+      if (Capacitor.isNativePlatform()) {
+        let parsedData: any = undefined;
+        if (options.body) {
+          try {
+            parsedData = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+          } catch {
+            parsedData = options.body;
+          }
+        }
+
+        const capRes = await CapacitorHttp.request({
+          url,
+          method: (options.method || 'GET').toUpperCase(),
+          headers,
+          data: parsedData
+        });
+
+        const resData = typeof capRes.data === 'string' ? JSON.parse(capRes.data) : capRes.data;
+        if (capRes.status >= 400) {
+          throw new Error(resData?.message || `Request failed (${capRes.status})`);
+        }
+        return resData;
+      }
+
       const res = await fetch(url, {
         ...options,
         headers
