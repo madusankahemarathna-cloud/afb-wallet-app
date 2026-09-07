@@ -17,6 +17,22 @@ router.post('/auth/login', AuthController.login);
 router.post('/auth/quick-login', AuthController.quickLogin);
 router.get('/auth/me', authenticateJWT, AuthController.getMe);
 router.get('/auth/demo-users', AuthController.getDemoUsers);
+router.get('/auth/test-smtp', async (req, res) => {
+  const { EmailService } = await import('../services/emailService');
+  const to = (req.query.to as string) || process.env.GMAIL_USER || 'slafpay4@gmail.com';
+  const verify = await EmailService.verifyConnection();
+  let sendResult = null;
+  if (verify.ok) {
+    sendResult = await EmailService.testSend(to);
+  }
+  res.json({
+    timestamp: new Date().toISOString(),
+    gmailUserConfigured: !!process.env.GMAIL_USER,
+    gmailUser: process.env.GMAIL_USER ? process.env.GMAIL_USER.replace(/(.{3})(.*)(@.*)/, '$1***$3') : null,
+    verify,
+    sendResult
+  });
+});
 
 // ==================== WALLET ROUTES ====================
 router.get('/wallet/balance', authenticateJWT, WalletController.getBalance);

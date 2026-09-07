@@ -4,8 +4,8 @@ export const getServerBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('afb_server_url');
     // If user explicitly saved an https cloud URL, use it
-    if (saved && (saved.startsWith('https://') || saved.startsWith('http://'))) {
-      if (!saved.includes('localhost') && !saved.includes('10.92.') && !saved.includes('127.0.0.1')) {
+    if (saved && saved.startsWith('https://')) {
+      if (!saved.includes('localhost') && !saved.includes('10.') && !saved.includes('192.168.') && !saved.includes('127.0.0.1')) {
         return saved;
       }
     }
@@ -54,18 +54,31 @@ export class ApiService {
           }
         }
 
-        const capRes = await CapacitorHttp.request({
-          url,
-          method: (options.method || 'GET').toUpperCase(),
-          headers,
-          data: parsedData
-        });
+        try {
+          const capRes = await CapacitorHttp.request({
+            url,
+            method: (options.method || 'GET').toUpperCase(),
+            headers,
+            data: parsedData,
+            connectTimeout: 90000,
+            readTimeout: 90000
+          });
 
-        const resData = typeof capRes.data === 'string' ? JSON.parse(capRes.data) : capRes.data;
-        if (capRes.status >= 400) {
-          throw new Error(resData?.message || `Request failed (${capRes.status})`);
+          const resData = typeof capRes.data === 'string' ? JSON.parse(capRes.data) : capRes.data;
+          if (capRes.status >= 400) {
+            throw new Error(resData?.message || `Request failed (${capRes.status})`);
+          }
+          return resData;
+        } catch (capErr: any) {
+          console.warn('[CapacitorHttp Error, falling back to standard fetch]:', capErr);
+          // Fallback to standard webview fetch if CapacitorHttp encounters bridge issue
+          const res = await fetch(url, { ...options, headers });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || 'Request failed');
+          }
+          return data;
         }
-        return resData;
       }
 
       const res = await fetch(url, {

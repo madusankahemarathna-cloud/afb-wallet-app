@@ -99,11 +99,13 @@ export class AuthController {
 
       res.json({
         success: true,
-        message: `A 6-digit verification code has been sent to ${cleanEmail}.`,
+        message: emailResult.sent
+          ? `A 6-digit verification code has been sent to ${cleanEmail}.`
+          : `Verification code generated. (Notice: ${emailResult.message})`,
         targetEmail: cleanEmail,
         expiresInSeconds: 600,
-        simulated: !process.env.GMAIL_USER,
-        otpPreview: !process.env.GMAIL_USER ? otp : undefined
+        simulated: !emailResult.sent || !process.env.GMAIL_USER,
+        otpPreview: (!emailResult.sent || !process.env.GMAIL_USER) ? otp : undefined
       });
     } catch (err: any) {
       console.error('Registration send OTP error:', err);

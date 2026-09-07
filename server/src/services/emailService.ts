@@ -35,6 +35,37 @@ export class EmailService {
     return null;
   }
 
+  static async verifyConnection(): Promise<{ ok: boolean; details: any }> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return { ok: false, details: 'No transporter configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)' };
+    }
+    try {
+      await transporter.verify();
+      return { ok: true, details: 'SMTP connection verified successfully' };
+    } catch (err: any) {
+      return { ok: false, details: { message: err.message, code: err.code } };
+    }
+  }
+
+  static async testSend(to: string): Promise<{ ok: boolean; details: any }> {
+    const transporter = this.getTransporter();
+    if (!transporter) {
+      return { ok: false, details: 'No transporter configured' };
+    }
+    try {
+      const info = await transporter.sendMail({
+        from: `"AFB Digital Wallet" <${process.env.GMAIL_USER}>`,
+        to,
+        subject: 'AFB Wallet SMTP Verification Test',
+        text: 'This is a test email from AFB Wallet Server to verify live delivery.'
+      });
+      return { ok: true, details: info };
+    } catch (err: any) {
+      return { ok: false, details: { message: err.message, code: err.code } };
+    }
+  }
+
   /**
    * Send 6-digit OTP for Registration Verification
    */
@@ -101,7 +132,7 @@ export class EmailService {
       console.error('❌ Failed to send live email via Gmail SMTP:', error.message);
       // Fallback logging so user flow never gets stuck
       console.log(`🔐 Fallback OTP Code: ${otp} for ${toEmail}`);
-      return { sent: true, message: 'OTP sent (Check email / fallback preview active)' };
+      return { sent: false, message: error.message || 'SMTP delivery failed' };
     }
   }
 
