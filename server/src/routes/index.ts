@@ -34,6 +34,36 @@ router.get('/auth/test-smtp', async (req, res) => {
   });
 });
 
+router.get('/auth/check-ports', async (_req, res) => {
+  const net = await import('net');
+  const checkPort = (host: string, port: number) => {
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+      socket.setTimeout(4000);
+      socket.on('connect', () => {
+        socket.destroy();
+        resolve({ host, port, status: 'OPEN' });
+      });
+      socket.on('timeout', () => {
+        socket.destroy();
+        resolve({ host, port, status: 'TIMEOUT_BLOCKED' });
+      });
+      socket.on('error', (err: any) => {
+        resolve({ host, port, status: 'ERROR', message: err.message });
+      });
+      socket.connect(port, host);
+    });
+  };
+
+  const results = await Promise.all([
+    checkPort('smtp.gmail.com', 465),
+    checkPort('smtp.gmail.com', 587),
+    checkPort('api.resend.com', 443)
+  ]);
+
+  res.json({ results });
+});
+
 // ==================== WALLET ROUTES ====================
 router.get('/wallet/balance', authenticateJWT, WalletController.getBalance);
 router.get('/wallet/transactions', authenticateJWT, WalletController.getTransactions);
