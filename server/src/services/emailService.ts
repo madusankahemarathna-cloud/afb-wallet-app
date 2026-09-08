@@ -69,13 +69,35 @@ export class EmailService {
     }
   }
 
+  private static async sendViaWebhook(toEmail: string, subject: string, html: string, text: string): Promise<{ sent: boolean; message: string }> {
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL;
+    if (!webhookUrl) return { sent: false, message: 'No webhook configured' };
+
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: toEmail,
+          subject,
+          html,
+          text
+        }),
+        redirect: 'follow'
+      });
+      console.log(`✅ Live Gmail successfully sent via Webhook Relay to ${toEmail}`);
+      return { sent: true, message: 'Verification OTP sent to your Gmail inbox' };
+    } catch (err: any) {
+      console.error('❌ Failed to send email via Webhook Relay:', err.message);
+      return { sent: false, message: err.message || 'Webhook delivery failed' };
+    }
+  }
+
   /**
    * Send 6-digit OTP for Registration Verification
    */
   static async sendRegistrationOtp(toEmail: string, otp: string, userName: string): Promise<{ sent: boolean; message: string }> {
-    const transporter = this.getTransporter();
     const fromAddress = process.env.GMAIL_USER || 'no-reply@afb-wallet.mil';
-
     const subject = `[AFB Digital Wallet] Account Verification Code: ${otp}`;
     const html = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 580px; margin: 0 auto; background-color: #0b1329; color: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -113,13 +135,23 @@ export class EmailService {
       </div>
     `;
 
+    // 1. If Webhook Relay is configured (Google Apps Script / HTTPS API), use it first
+    if (process.env.GMAIL_WEBHOOK_URL) {
+      const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet OTP is: ${otp}`);
+      if (webhookRes.sent) {
+        return webhookRes;
+      }
+    }
+
+    // 2. Fallback to Direct Nodemailer SMTP
+    const transporter = this.getTransporter();
     if (!transporter) {
       console.log(`\n========================================`);
       console.log(`📧 [EMAIL SIMULATOR] Registration OTP to ${toEmail}`);
       console.log(`🔐 Verification Code: ${otp} (User: ${userName})`);
-      console.log(`ℹ️ To deliver live emails, set GMAIL_USER & GMAIL_APP_PASSWORD in environment variables.`);
+      console.log(`ℹ️ To deliver live emails, set GMAIL_USER & GMAIL_APP_PASSWORD or GMAIL_WEBHOOK_URL.`);
       console.log(`========================================\n`);
-      return { sent: true, message: 'OTP generated (Simulated mode / Ready for live Gmail SMTP)' };
+      return { sent: true, message: 'OTP generated (Simulated mode)' };
     }
 
     try {
@@ -182,6 +214,14 @@ export class EmailService {
         </div>
       </div>
     `;
+
+    // 1. If Webhook Relay is configured, use it first
+    if (process.env.GMAIL_WEBHOOK_URL) {
+      const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet Password Reset code is: ${otp}`);
+      if (webhookRes.sent) {
+        return webhookRes;
+      }
+    }
 
     if (!transporter) {
       console.log(`\n========================================`);
