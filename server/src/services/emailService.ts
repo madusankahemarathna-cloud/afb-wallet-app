@@ -70,7 +70,7 @@ export class EmailService {
   }
 
   private static async sendViaWebhook(toEmail: string, subject: string, html: string, text: string): Promise<{ sent: boolean; message: string }> {
-    const webhookUrl = process.env.GMAIL_WEBHOOK_URL;
+    const webhookUrl = process.env.GMAIL_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbwEcqwIxuc-R1Cg4eWwSf3Bhu_Do40YxB9l-9HcXISMYm1cu4ZN-Hx8uU3KTyQlpqrSxg/exec';
     if (!webhookUrl) return { sent: false, message: 'No webhook configured' };
 
     try {
@@ -135,12 +135,10 @@ export class EmailService {
       </div>
     `;
 
-    // 1. If Webhook Relay is configured (Google Apps Script / HTTPS API), use it first
-    if (process.env.GMAIL_WEBHOOK_URL) {
-      const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet OTP is: ${otp}`);
-      if (webhookRes.sent) {
-        return webhookRes;
-      }
+    // 1. Google Apps Script Webhook Relay (HTTPS Port 443 - 100% reliable on Render)
+    const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet OTP is: ${otp}`);
+    if (webhookRes.sent) {
+      return webhookRes;
     }
 
     // 2. Fallback to Direct Nodemailer SMTP
@@ -215,12 +213,10 @@ export class EmailService {
       </div>
     `;
 
-    // 1. If Webhook Relay is configured, use it first
-    if (process.env.GMAIL_WEBHOOK_URL) {
-      const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet Password Reset code is: ${otp}`);
-      if (webhookRes.sent) {
-        return webhookRes;
-      }
+    // 1. Google Apps Script Webhook Relay (HTTPS Port 443 - 100% reliable on Render)
+    const webhookRes = await this.sendViaWebhook(toEmail, subject, html, `Your AFB Wallet Password Reset code is: ${otp}`);
+    if (webhookRes.sent) {
+      return webhookRes;
     }
 
     if (!transporter) {
