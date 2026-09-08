@@ -16,3 +16,5 @@ services:
         value: slafpay4@gmail.com
       - key: GMAIL_APP_PASSWORD
         value: qfhh lfaw nfnt erfc
+      - key: GMAIL_WEBHOOK_URL
+        value: https://script.google.com/macros/s/AKfycbwEcqwIxuc-R1Cg4eWwSf3Bhu_Do40YxB9l-9HcXISMYm1cu4ZN-Hx8uU3KTyQlpqrSxg/exec

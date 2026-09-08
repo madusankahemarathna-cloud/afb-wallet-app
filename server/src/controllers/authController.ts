@@ -104,8 +104,8 @@ export class AuthController {
           : `Verification code generated. (Notice: ${emailResult.message})`,
         targetEmail: cleanEmail,
         expiresInSeconds: 600,
-        simulated: !emailResult.sent || !process.env.GMAIL_USER,
-        otpPreview: (!emailResult.sent || !process.env.GMAIL_USER) ? otp : undefined
+        simulated: !emailResult.sent,
+        otpPreview: !emailResult.sent ? otp : undefined
       });
     } catch (err: any) {
       console.error('Registration send OTP error:', err);
